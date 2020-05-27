@@ -1,35 +1,16 @@
 import React from "react";
 import Axios from "axios";
-
+import {Table, Container} from "react-bootstrap";
 
 import NetWorth from '../../components/netWorth';
 
+
 import './styles.scss';
+import {MDBDataTable} from "mdbreact";
 
 const BTC_CAD_rate = 12601.31;
 const ETH_CAD_rate = 285.05;
-const CAD_balance = 1;
-const BTC_balance = 3;
-const ETH_balance = 5;
 
-const rates = {
-    CAD_BTC: 0.000079,
-    BTC_CAD: 12657.73,
-    CAD_ETH: 0.003504927856835348,
-    ETH_CAD: 285.31,
-    USD_BTC: 0.00010888,
-    BTC_USD: 9184.32,
-    USD_ETH: 0.00483045116413873,
-    ETH_USD: 207.02,
-    BTC_ETH: 44.35573297848747,
-    ETH_BTC: 0.022545,
-    CAD_USD: 0.72,
-    USD_CAD: 1.37
-};
-
-/**
- *
- */
 
 export default class Home extends React.Component {
     constructor(props) {
@@ -50,9 +31,11 @@ export default class Home extends React.Component {
             balance_cad: 0,
             balance_btc: 0,
             balance_eth: 0,
+            tableRows: []
         };
 
         this.calculateTransactions = this.calculateTransactions.bind(this);
+        this.createRows = this.createRows.bind(this);
     }
     componentDidMount = async () => {
         const apiUrl = 'https://shakepay.github.io/programming-exercise/web/transaction_history.json';
@@ -61,6 +44,8 @@ export default class Home extends React.Component {
             this.setState({transaction: res.data});
 
             this.calculateTransactions(res.data);
+
+            this.createRows(res.data);
         });
     };
     calculateTransactions (transactions) {
@@ -117,27 +102,122 @@ export default class Home extends React.Component {
                     balance_eth += trans.to.amount;
                 }
             }
+
+            return 'ok';
         });
 
         this.setState({balance_cad: balance_cad});
         this.setState({balance_btc: balance_btc});
         this.setState({balance_eth: balance_eth});
     }
+    createRows (transactions) {
+
+        let rows = [];
+
+        transactions.map((elem) => (
+            rows.push({
+                date : elem.createdAt,
+                amount : elem.amount,
+                currency : elem.currency,
+                transit_type : elem.type,
+                direction : elem.direction
+            })
+        ));
+
+
+        this.setState({tableRows: rows})
+    }
+    dataTable () {
+        const data = {
+            columns: [
+                {
+                    label: 'Date',
+                    field: 'date',
+                    sort: 'asc',
+                    width: 150
+                },
+                {
+                    label: 'Amount',
+                    field: 'amount',
+                    sort: 'asc',
+                    width: 270
+                },
+                {
+                    label: 'Currency',
+                    field: 'currency',
+                    sort: 'asc',
+                    width: 200
+                },
+                {
+                    label: 'Transit type',
+                    field: 'transit_type',
+                    sort: 'asc',
+                    width: 100
+                },
+                {
+                    label: 'direction',
+                    field: 'direction',
+                    sort: 'asc',
+                    width: 150
+                }
+            ],
+            rows: this.state.tableRows
+        };
+
+        return (
+            <MDBDataTable
+                striped
+                bordered
+                small
+                data={data}
+            />
+        );
+    }
     render () {
         return (
             <>
-                <ul>
-                    <li>CAD: {this.state.balance_cad}</li>
-                    <li>BTC: {this.state.balance_btc}</li>
-                    <li>ETH: {this.state.balance_eth}</li>
-                </ul>
-                Net Worth: <NetWorth
-                CAD_balance={this.state.balance_cad}
-                BTC_balance={this.state.balance_btc}
-                ETH_balance={this.state.balance_eth}
-                BTC_CAD_rate={BTC_CAD_rate}
-                ETH_CAD_rate={ETH_CAD_rate}
-                />
+                <Container>
+                    <br/>
+                    <h1 className={'text-center'}>Programming Exercise ShakePay</h1>
+
+                    <h3>BALANCE</h3>
+                    <Table striped bordered hover>
+
+                        <thead>
+                        <tr>
+                            <th>CAD</th>
+                            <th>BTC</th>
+                            <th>ETH</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>${this.state.balance_cad.toFixed(2)}</td>
+                            <td>{this.state.balance_btc}</td>
+                            <td>{this.state.balance_eth}</td>
+                        </tr>
+                        </tbody>
+                    </Table>
+
+                    <strong>
+                        Net Worth in CAD:  {NetWorth({
+                        CAD_balance: this.state.balance_cad,
+                        BTC_balance: this.state.balance_btc,
+                        ETH_balance: this.state.balance_eth,
+                        BTC_CAD_rate: BTC_CAD_rate,
+                        ETH_CAD_rate: ETH_CAD_rate
+                    })}
+                    </strong>
+
+                    <hr/>
+
+                    <h3>TRANSACTIONS HISTORY</h3>
+                    { this.state.tableRows.length > 0 && (
+                        this.dataTable()
+                    )}
+
+
+                </Container>
             </>
         )
     }

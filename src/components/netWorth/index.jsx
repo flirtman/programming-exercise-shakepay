@@ -1,5 +1,5 @@
-const NetWorth = (props) => {
-    return (props.CAD_balance + (props.BTC_balance * props.BTC_CAD_rate) + (props.ETH_balance * props.ETH_CAD_rate))
+const NetWorth = (obj) => {
+    return (obj.CAD_balance + (obj.BTC_balance * obj.BTC_CAD_rate) + (obj.ETH_balance * obj.ETH_CAD_rate)).toFixed(2);
 };
 
 export default NetWorth;
